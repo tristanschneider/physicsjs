@@ -1,0 +1,12 @@
+{
+  "name": "physicsjs",
+  "version": "1.0.0",
+  "description": "Simple physics examples for use in browsers.",
+  "main": "demo.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "webpack": "^3.8.1"
+  }
+}
