@@ -22,8 +22,8 @@ class Constraint {
     this.shouldEnforce = true;
     this.bias = 0.0;
     this.constraintMass = 0.0;
-    this.slop = 0.01;
-    this.baumgarteTerm = 0.3;
+    this.slop = 0.05;
+    this.baumgarteTerm = 0.3*30;
   }
 
   setBias(error) {
@@ -76,7 +76,7 @@ class Constraint {
     this.lambdaSum = Math.min(this.upperBound, Math.max(this.lowerBound, this.lambdaSum));
     lambda = this.lambdaSum - oldSum;
     this.applyImpulse(lambda);
-    return Math.abs(jvb);
+    return Math.abs(safeDivide(lambda, this.constraintMass));
   }
 
   applyImpulse(lambda) {
@@ -121,13 +121,14 @@ export class ContactConstraint extends Constraint {
     this.lowerBound = 0.0;
   }
 
-  setup() {
+  setup(drawer) {
     //Normal is from reference to incident, we want to push apart, so flip
     this.setAnchoredJacobian(this.contact, this.contact, this.normal.neg());
     this.setBias(this.penetration);
     //No persistent manifolds, so throw out these constraints after solving each frame
     this.shouldRemove = true;
-    super.setup();
+
+    super.setup(drawer);
   }
 }
 
@@ -139,10 +140,10 @@ export class FrictionConstraint extends Constraint {
     this.cc = contactConstraint;
     //Set each frame to normal force
     this.upperBound = this.lowerBound = 0.0;
-    this.frictionTerm = 0.8;
+    this.frictionTerm = 0.99;
   }
 
-  setup() {
+  setup(drawer) {
     this.setAnchoredJacobian(this.contact, this.contact, new Vec2(-this.normal.y, this.normal.x))
     this.shouldRemove = true;
     super.setup();
@@ -151,6 +152,6 @@ export class FrictionConstraint extends Constraint {
   solve() {
     this.upperBound = this.cc.lambdaSum*this.frictionTerm;
     this.lowerBound = -this.upperBound;
-    super.solve();
+    return super.solve();
   }
 }

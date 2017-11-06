@@ -45,7 +45,7 @@ export class Narrowphase {
   }
 
   //One iteration of Sutherland Hodgman clipping
-  clip(start, end, againstNormal, againstPoint, pushIntersect) {
+  clip(start, end, againstNormal, againstPoint) {
     let pDot = againstNormal.dot(againstPoint);
     let startDot = againstNormal.dot(start);
     if(end == undefined)
@@ -57,11 +57,11 @@ export class Narrowphase {
       if(endDot > pDot)
         return null;
       //Start in front, end inside
-      return pushIntersect ? [this.getIntersect(start, end, startDot, endDot, pDot), end] : [end];
+      return [this.getIntersect(start, end, startDot, endDot, pDot), end];
     }
     //Start inside end outside
     else if(endDot > pDot)
-      return pushIntersect ? [start, this.getIntersect(start, end, startDot, endDot, pDot)] : [start];
+      return [start, this.getIntersect(start, end, startDot, endDot, pDot)];
     //Both inside
     return [start, end];
   }
@@ -76,7 +76,7 @@ export class Narrowphase {
     //Sutherland Hodgman clip against normal and two adjacent edges
     for(let i = 0; i < 3; ++i) {
       //Don't push intersection with reference edge, that's bad for stability
-      line = this.clip(line[0], line[1], normals[i], pointsOnNormal[i], i != 1);
+      line = this.clip(line[0], line[1], normals[i], pointsOnNormal[i]);
       if(!line)
         return null;
     }

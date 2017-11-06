@@ -20,26 +20,24 @@ export class Scene {
     this.narrowphase = new Narrowphase();
     this.lines = [];
     this.curLineColor = 'white';
+    this.scale = 5.0;
+
     this.queueUpdate();
   }
 
   update(dt) {
-    this.draw();
     this.integrateVelocity(dt);
     this.doNarrowphase();
     this.solveConstraints();
     this.integratePosition(dt);
+    this.draw();
   }
 
   queueUpdate() {
     //30fps
     const intervalMS = 33.3;
     const intervalS = intervalMS/1000.0;
-    //this.last = performance.now();
     setInterval(()=>{
-      //let now = performance.now();
-      //console.log(now - this.last);
-      //this.last = now;
       this.update(intervalS);
     }, intervalMS);
   }
@@ -75,8 +73,9 @@ export class Scene {
       this.constraints[i].setup(this);
 
     //Solve until iteration cap or global solution
-    for(let i = 0; i < 10; ++i) {
-      let globalError = 0.0;
+    let globalError = 0.0;
+    for(let i = 0; i < 20; ++i) {
+      globalError = 0.0;
       for(let j = 0; j < this.constraints.length; ++j)
         globalError += this.constraints[j].solve();
       if(globalError < 0.001)
@@ -102,9 +101,9 @@ export class Scene {
     this.context.fillStyle = 'red';
     for(let i = 0; i < this.objects.length; ++i) {
       let o = this.objects[i];
-      this.context.translate(o.pos.x, o.pos.y);
+      this.context.translate(o.pos.x*this.scale, o.pos.y*this.scale);
       this.context.rotate(o.rot);
-      this.context.fillRect(-o.scale.x, -o.scale.y, o.scale.x*2.0, o.scale.y*2.0);
+      this.context.fillRect(-o.scale.x*this.scale, -o.scale.y*this.scale, o.scale.x*2.0*this.scale, o.scale.y*2.0*this.scale);
       this.context.setTransform(1.0, 0.0, 0.0, 1.0, 0.0, 0.0);
     }
     //Draw debug lines last so they always show up
@@ -112,8 +111,8 @@ export class Scene {
       let line = this.lines[i];
       this.context.strokeStyle = line.color;
       this.context.beginPath();
-      this.context.moveTo(line.start.x, line.start.y);
-      this.context.lineTo(line.end.x, line.end.y);
+      this.context.moveTo(line.start.x*this.scale, line.start.y*this.scale);
+      this.context.lineTo(line.end.x*this.scale, line.end.y*this.scale);
       this.context.stroke();
     }
     this.lines = [];
