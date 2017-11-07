@@ -44,4 +44,7 @@ export class Rigidbody {
   modelToWorld(model) {
     return model.mulVec(this.scale).rotate(this.rot).add(this.pos); 
   }
+  worldToModel(world) {
+    return world.sub(this.pos).rotate(-this.rot).mulVec(this.scale.recip());
+  }
 }

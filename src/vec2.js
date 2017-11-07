@@ -36,6 +36,10 @@ export class Vec2 {
     return new Vec2(-this.x, -this.y);
   }
 
+  recip() {
+    return new Vec2(safeDivide(1.0, this.x), safeDivide(1.0, this.y));
+  }
+
   projScalar(onto) {
     return safeDivide(this.dot(onto), onto.dot(onto));
   }

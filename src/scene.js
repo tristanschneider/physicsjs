@@ -1,5 +1,7 @@
 import { Narrowphase } from './narrowphase';
-import { ContactConstraint, FrictionConstraint } from './constraints';
+import { ContactConstraint, FrictionConstraint, DistanceConstraint } from './constraints';
+import { Vec2 } from './vec2';
+import { Rigidbody } from './rigidbody';
 
 class Line {
   constructor(start, end, color) {
@@ -21,16 +23,59 @@ export class Scene {
     this.lines = [];
     this.curLineColor = 'white';
     this.scale = 5.0;
+    this.mousePos = new Vec2();
+    this.mouseObject = new Rigidbody(new Vec2(0, 0), new Vec2(0, 0), 0);
+    this.mouseConstraint = null;
 
     this.queueUpdate();
+
+    canvas.addEventListener('mousemove', (e)=> {
+      let rect = canvas.getBoundingClientRect();
+      this.mousePos = new Vec2(e.clientX - rect.left, e.clientY - rect.top);
+      this.mousePos = this.mousePos.mul(1.0/this.scale);
+    }, false);
+
+    canvas.addEventListener('mousedown', (e) => {
+      console.log('mouse down');
+      if(!this.mouseConstraint) {
+        let obj = this.pick(this.mousePos);
+        if(obj) {
+          this.createMouseConstraint(obj, this.mousePos);
+        }
+      }
+      else {
+        this.removeMouseConstraint();
+      }
+    }, false);
   }
 
   update(dt) {
+    this.mouseObject.pos = this.mousePos;
+    if(this.mouseConstraint) {
+      let o = this.mouseConstraint.bodyA;
+      //Damp a lot for mouse object since the position corrections 
+      o.linVel = o.linVel.mul(0.95);
+      o.angVel *= 0.95;
+    }
+
     this.integrateVelocity(dt);
     this.doNarrowphase();
     this.solveConstraints();
     this.integratePosition(dt);
     this.draw();
+  }
+
+  createMouseConstraint(obj, point) {
+      this.mouseConstraint = new DistanceConstraint(obj, this.mouseObject, obj.worldToModel(point), new Vec2(0, 0), 0.5);
+      this.bias = 0.3;
+      this.mouseConstraint.upperBound = 15.0;
+      this.mouseConstraint.lowerBound = -15.0;
+      this.constraints.push(this.mouseConstraint);
+  }
+
+  removeMouseConstraint() {
+    this.mouseConstraint.shouldRemove = true;
+    this.mouseConstraint = null;
   }
 
   queueUpdate() {
@@ -63,6 +108,16 @@ export class Scene {
             this.constraints.push(new FrictionConstraint(m.objA, m.objB, m.contacts[c], m.normal, cc));
           }
         }
+      }
+    }
+  }
+
+  pick(point) {
+    for(let i = 0; i < this.objects.length; ++i) {
+      let obj = this.objects[i];
+      let model = obj.worldToModel(point);
+      if(Math.abs(model.x) < 1.0 && Math.abs(model.y) < 1.0) {
+        return obj;
       }
     }
   }
