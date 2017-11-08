@@ -36,7 +36,6 @@ export class Scene {
     }, false);
 
     canvas.addEventListener('mousedown', (e) => {
-      console.log('mouse down');
       if(!this.mouseConstraint) {
         let obj = this.pick(this.mousePos);
         if(obj) {
