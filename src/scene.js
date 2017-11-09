@@ -27,15 +27,20 @@ export class Scene {
     this.mouseObject = new Rigidbody(new Vec2(0, 0), new Vec2(0, 0), 0);
     this.mouseConstraint = null;
 
+    this.setupInputEvents();
     this.queueUpdate();
+  }
 
-    canvas.addEventListener('mousemove', (e)=> {
-      let rect = canvas.getBoundingClientRect();
+  setupInputEvents() {
+    let mouseMove = (e)=> {
+      let rect = this.canvas.getBoundingClientRect();
       this.mousePos = new Vec2(e.clientX - rect.left, e.clientY - rect.top);
       this.mousePos = this.mousePos.mul(1.0/this.scale);
-    }, false);
+    };
+    this.canvas.addEventListener('mousemove', mouseMove, false);
+    this.canvas.addEventListener('touchmove', (e)=>{ mouseMove(this.touchToMouse(e)); }, false);
 
-    canvas.addEventListener('mousedown', (e) => {
+    let mouseDown = (e)=> {
       if(!this.mouseConstraint) {
         let obj = this.pick(this.mousePos);
         if(obj) {
@@ -45,7 +50,35 @@ export class Scene {
       else {
         this.removeMouseConstraint();
       }
+    }
+    this.canvas.addEventListener('mousedown', mouseDown, false);
+
+    this.canvas.addEventListener('touchstart', (e)=>{
+      let te = this.touchToMouse(e);
+      //Hack to set the mouse position as down doesn't update it
+      mouseMove(te);
+      mouseDown(te);
     }, false);
+
+    this.canvas.addEventListener('touchend', (e)=>{
+      this.removeMouseConstraint();
+    }, false);
+  }
+
+  touchToMouse(touchEvent) {
+    let t = touchEvent.changedTouches[0];
+    //Only these properties are used by my function
+    if(t) {
+      return {
+        'clientX': t.clientX,
+        'clientY': t.clientY
+      };
+    }
+    //Not sure how this would happen, but undefined would make objects disappear
+    return {
+      'clientX': 0,
+      'clientY': 0
+    };
   }
 
   update(dt) {
@@ -73,7 +106,8 @@ export class Scene {
   }
 
   removeMouseConstraint() {
-    this.mouseConstraint.shouldRemove = true;
+    if(this.mouseConstraint)
+      this.mouseConstraint.shouldRemove = true;
     this.mouseConstraint = null;
   }
 
