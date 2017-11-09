@@ -26,7 +26,9 @@ export class Scene {
     this.mousePos = new Vec2();
     this.mouseObject = new Rigidbody(new Vec2(0, 0), new Vec2(0, 0), 0);
     this.mouseConstraint = null;
-
+    this.accumulatedTime = 0.0;
+    this.lastTime = performance.now();
+    
     this.setupInputEvents();
     this.queueUpdate();
   }
@@ -115,9 +117,22 @@ export class Scene {
     //30fps
     const intervalMS = 33.3;
     const intervalS = intervalMS/1000.0;
-    setInterval(()=>{
-      this.update(intervalS);
-    }, intervalMS);
+
+    window.requestAnimationFrame((timestamp)=>{
+      this.accumulatedTime += timestamp - this.lastTime;
+
+      const maxBacklog = 10;
+      let runFrames = 0;
+      while(this.accumulatedTime > intervalMS) {
+        this.update(intervalS);
+        this.accumulatedTime -= intervalMS;
+        runFrames += 1;
+        if(runFrames > maxBacklog)
+          this.accumulatedTime = 0;
+      }
+      this.lastTime = performance.now();
+      this.queueUpdate();
+    });
   }
 
   integrateVelocity(dt) {
