@@ -11,20 +11,21 @@ function addWalls(scene, max, thickness) {
   scene.objects.push(new Rigidbody(new Vec2(halfMax.x, 0), new Vec2(halfMax.x, thickness), 0.0));
 }
 
-function addScene(canvasName, resetName, initFunc) {
+function addScene(canvasName, initFunc) {
   let canvas = document.getElementById(canvasName);
   let scene = new Scene(canvas);
-  let resetButton = document.getElementById(resetName);
-  if(resetButton)
+  let resetButton = document.getElementById(canvasName + 'Reset');
+  if(resetButton) {
     resetButton.onclick = ()=>{
       scene.objects = [];
       scene.constraints = [];
-      initFunc(scene)
+      initFunc(scene);
     };
+  }
   initFunc(scene);
 }
 
-addScene('canvas1', 'reset1', (scene)=>{
+addScene('constraints', (scene)=>{
   scene.scale = 10;
   let s = new Vec2(1.0, 1.0);
   let b = new Rigidbody(new Vec2(19, 4), s);
@@ -52,12 +53,17 @@ addScene('canvas1', 'reset1', (scene)=>{
   }
 });
 
-addScene('canvas2', 'reset2', (scene)=>{
+addScene('nobias', (scene)=>{
   scene.scale = 10;
-  let s = new Vec2(1.5, 1.0);
   addWalls(scene, new Vec2(40, 40), 0.5);
-  for(let i = 0; i < 5; ++i) {
-    let o = new Rigidbody(new Vec2(10 + i*0.0, 39 - i*2), s);
-    scene.objects.push(o);
-  }
+  let s = new Vec2(1, 1);
+  let a = new Rigidbody(new Vec2(15, 20), s, 0);
+  let b = new Rigidbody(new Vec2(20, 20), s);
+  let distAB = new DistanceConstraint(a, b, new Vec2(1, 0), new Vec2(-1, 0), 3);
+  distAB.baumgarteTerm = 0.0;
+  let c = new Rigidbody(new Vec2(30, 20), s, 0);
+  let d = new Rigidbody(new Vec2(35, 20), s);
+  let distCD = new DistanceConstraint(c, d, new Vec2(1, 0), new Vec2(-1, 0), 3);
+  scene.objects.push(a, b, c, d);
+  scene.constraints.push(distAB, distCD);
 });
