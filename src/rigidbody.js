@@ -47,4 +47,7 @@ export class Rigidbody {
   worldToModel(world) {
     return world.sub(this.pos).rotate(-this.rot).mulVec(this.scale.recip());
   }
+  isMobile() {
+    return this.mass != 0 || this.inertia != 0;
+  }
 }

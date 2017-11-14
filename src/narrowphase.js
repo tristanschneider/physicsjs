@@ -93,6 +93,8 @@ export class Narrowphase {
   }
   
   getManifold(bodyA, bodyB) {
+    if(!bodyA.isMobile() && !bodyB.isMobile())
+      return null;
     let axes = this.getAxes(bodyA, bodyB);
     let bestAxis = 0;
     let leastPenetration = Number.MAX_VALUE;
