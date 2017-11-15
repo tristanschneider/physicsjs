@@ -53,17 +53,44 @@ addScene('constraints', (scene)=>{
   }
 });
 
-addScene('nobias', (scene)=>{
-  scene.scale = 10;
-  addWalls(scene, new Vec2(40, 40), 0.5);
+function createChain(scene, pos, dist, set, chain) {
   let s = new Vec2(1, 1);
-  let a = new Rigidbody(new Vec2(15, 20), s, 0);
-  let b = new Rigidbody(new Vec2(20, 20), s);
-  let distAB = new DistanceConstraint(a, b, new Vec2(1, 0), new Vec2(-1, 0), 3);
-  distAB.baumgarteTerm = 0.0;
-  let c = new Rigidbody(new Vec2(30, 20), s, 0);
-  let d = new Rigidbody(new Vec2(35, 20), s);
-  let distCD = new DistanceConstraint(c, d, new Vec2(1, 0), new Vec2(-1, 0), 3);
-  scene.objects.push(a, b, c, d);
-  scene.constraints.push(distAB, distCD);
+  let last = new Rigidbody(pos, s);
+  last.mass = 0;
+  scene.objects.push(last);
+  for(let i = 0; i < chain; ++i) {
+    let cur = new Rigidbody(new Vec2(last.pos.x + dist + s.x*2, last.pos.y), s);
+    let constraint = new DistanceConstraint(last, cur, new Vec2(1, 0), new Vec2(-1, 0), dist);
+    if(set)
+      set(constraint);
+    scene.objects.push(cur);
+    scene.constraints.push(constraint);
+    last = cur;
+  }
+}
+
+// Build a scene with two distance constraints configured by the two callbacks
+function distCompare(scene, setA, setB, chain) {
+  scene.scale = 10;
+  createChain(scene, new Vec2(10, 20), 2.5, setA, chain);
+  createChain(scene, new Vec2(26, 20), 2.5, setB, chain);
+}
+
+addScene('noBias', (scene)=>{
+  distCompare(scene, (ab)=>{
+    ab.baumgarteTerm = 0.0;
+  },
+  null, 1);
+});
+
+addScene('biasRange', (scene)=>{
+  distCompare(scene, (ab)=>{
+    //10% per second
+    ab.baumgarteTerm = 0.1;
+  },
+  (ab)=>{
+    //100% per frame
+    ab.baumgarteTerm = 30;
+  },
+  3);
 });
