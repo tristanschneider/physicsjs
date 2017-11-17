@@ -28,6 +28,7 @@ export class Scene {
     this.mouseConstraint = null;
     this.accumulatedTime = 0.0;
     this.lastTime = performance.now();
+    this.contactSlop = 0.05;
     
     this.setupInputEvents();
     this.queueUpdate();
@@ -152,6 +153,7 @@ export class Scene {
         if(m) {
           for(let c = 0; c < m.contacts.length; ++c) {
             let cc = new ContactConstraint(m.objA, m.objB, m.contacts[c], m.normal, m.penetrations[c]);
+            cc.slop = this.contactSlop;
             this.constraints.push(cc);
             this.constraints.push(new FrictionConstraint(m.objA, m.objB, m.contacts[c], m.normal, cc));
           }

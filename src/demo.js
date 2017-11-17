@@ -11,16 +11,16 @@ function addWalls(scene, max, thickness) {
   scene.objects.push(new Rigidbody(new Vec2(halfMax.x, 0), new Vec2(halfMax.x, thickness), 0.0));
 }
 
-function addScene(canvasName, initFunc) {
+function addScene(canvasName, initFunc, resetName) {
   let canvas = document.getElementById(canvasName);
   let scene = new Scene(canvas);
-  let resetButton = document.getElementById(canvasName + 'Reset');
+  let resetButton = document.getElementById(resetName ? resetName : canvasName + 'Reset');
   if(resetButton) {
-    resetButton.onclick = ()=>{
+    resetButton.addEventListener('click', ()=>{
       scene.objects = [];
       scene.constraints = [];
       initFunc(scene);
-    };
+    });
   }
   initFunc(scene);
 }
@@ -93,4 +93,24 @@ addScene('biasRange', (scene)=>{
     ab.baumgarteTerm = 30;
   },
   3);
+});
+
+function addStack(scene, origin, objects, space) {
+  for(let i = 0; i < objects; ++i)
+    scene.objects.push(new Rigidbody(origin.add(new Vec2(0, -(2 + space)*i)), new Vec2(1, 1)));
+}
+
+addScene('direction', (scene)=>{
+  distCompare(scene, (ab)=>{
+    ab.upperBound = 0;
+    ab.distance = 6;
+  },
+  (ab)=>{
+    ab.lowerBound = 0;
+    ab.distance = 6;
+  },
+  1);
+  for(let i = 0; i < scene.objects.length; ++i)
+    scene.objects[i].resetMass(1);
+  addWalls(scene, new Vec2(40, 40), 0.5);
 });

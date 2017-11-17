@@ -10,27 +10,35 @@ export class Rigidbody {
     //Vector from center to top right corner
     this.scale = scale;
     //Scale is half, get the whole size
-    let width = scale.x*2.0;
-    let height = scale.y*2.0;
-    this.mass = width*height*density;
-    this.inertia = this.mass*(width*width + height*height)/12.0;
-    this.mass = safeDivide(1.0, this.mass);
-    this.inertia = safeDivide(1.0, this.inertia);
+    this.gravity = 20;
+    this.linDamp = 0.995;
+    this.angDamp = 0.99;
+    this.mass = 0;
+    this.inertia = 0;
+    this.resetMass(density);
   }
   integrateVelocity(dt) {
     if(this.mass != 0.0)
-      this.linVel.y += dt*20.0;
+      this.linVel.y += dt*this.gravity;
   }
   integratePosition(dt) {
     //Integrate and apply some fake damping
     if(this.mass != 0.0) {
       this.pos = this.pos.add(this.linVel.mul(dt));
-      this.linVel = this.linVel.mul(0.995);
+      this.linVel = this.linVel.mul(this.linDamp);
     }
     if(this.inertia != 0.0) {
       this.rot += this.angVel*dt;
-      this.angVel *= 0.99;
+      this.angVel *= this.angDamp;
     }
+  }
+  resetMass(density) {
+    let width = this.scale.x*2.0;
+    let height = this.scale.y*2.0;
+    this.mass = width*height*density;
+    this.inertia = this.mass*(width*width + height*height)/12.0;
+    this.mass = safeDivide(1.0, this.mass);
+    this.inertia = safeDivide(1.0, this.inertia);
   }
   //Inefficient, would be better to store right vector so you can cross to get up
   getUp(scaled) {
