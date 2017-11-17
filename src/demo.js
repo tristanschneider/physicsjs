@@ -114,3 +114,25 @@ addScene('direction', (scene)=>{
     scene.objects[i].resetMass(1);
   addWalls(scene, new Vec2(40, 40), 0.5);
 });
+
+class StickyDistanceConstraint extends DistanceConstraint {
+  constructor(bodyA, bodyB, modelAnchorA, modelAnchorB, distance) {
+    super(bodyA, bodyB, modelAnchorA, modelAnchorB, distance);
+  }
+
+  setup(drawer) {
+    let dist = this.bodyA.modelToWorld(this.anchorA).sub(this.bodyB.modelToWorld(this.anchorB)).normalize();
+    this.shouldEnforce = dist > this.distance;
+    super.setup(drawer);
+  }
+}
+
+addScene('sticky', (scene)=>{
+  scene.scale = 10;
+  let s = new Vec2(1, 1);
+  let a = new Rigidbody(new Vec2(20, 20), s);
+  let b = new Rigidbody(new Vec2(25, 20), s);
+  scene.constraints.push(new StickyDistanceConstraint(a, b, new Vec2(1, 0), new Vec2(-1, 0), 6));
+  scene.objects.push(a, b);
+  addWalls(scene, new Vec2(40, 40), 0.5);
+});
