@@ -2,6 +2,7 @@ import { Narrowphase } from './narrowphase';
 import { ContactConstraint, FrictionConstraint, DistanceConstraint } from './constraints';
 import { Vec2 } from './vec2';
 import { Rigidbody } from './rigidbody';
+import { ContactCache } from './contactCache'
 
 class Line {
   constructor(start, end, color) {
@@ -28,10 +29,21 @@ export class Scene {
     this.mouseConstraint = null;
     this.accumulatedTime = 0.0;
     this.lastTime = performance.now();
-    this.contactSlop = 0.05;
-    
+    this.contactCache = new ContactCache(this.constraints, 0.02);
+
     this.setupInputEvents();
     this.queueUpdate();
+  }
+
+  clear() {
+    this.objects = [];
+    this.constraints = [];
+    this.contactCache.clear();
+    this.contactCache.setConstraintContainer(this.constraints);
+  }
+
+  setContactSlop(slop) {
+    this.contactCache.slop = slop;
   }
 
   setupInputEvents() {
@@ -150,14 +162,10 @@ export class Scene {
     for(let i = 0; i < this.objects.length; ++i) {
       for(let j = i + 1; j < this.objects.length; ++j) {
         let m = this.narrowphase.getManifold(this.objects[i], this.objects[j]);
-        if(m) {
-          for(let c = 0; c < m.contacts.length; ++c) {
-            let cc = new ContactConstraint(m.objA, m.objB, m.contacts[c], m.normal, m.penetrations[c]);
-            cc.slop = this.contactSlop;
-            this.constraints.push(cc);
-            this.constraints.push(new FrictionConstraint(m.objA, m.objB, m.contacts[c], m.normal, cc));
-          }
-        }
+        if(m)
+          this.contactCache.addManifold(m, i, j);
+        else
+          this.contactCache.removeManifold(i, j);
       }
     }
   }
@@ -183,7 +191,7 @@ export class Scene {
       globalError = 0.0;
       for(let j = 0; j < this.constraints.length; ++j)
         globalError += this.constraints[j].solve();
-      if(globalError < 0.001)
+      if(globalError < 0.00001)
         break;
     }
 

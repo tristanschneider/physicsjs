@@ -13,16 +13,45 @@ function addWalls(scene, max, thickness) {
 
 function addScene(canvasName, initFunc, resetName) {
   let canvas = document.getElementById(canvasName);
+  if(!canvas)
+    return;
   let scene = new Scene(canvas);
   let resetButton = document.getElementById(resetName ? resetName : canvasName + 'Reset');
   if(resetButton) {
     resetButton.addEventListener('click', ()=>{
-      scene.objects = [];
-      scene.constraints = [];
+      scene.clear();
       initFunc(scene);
     });
   }
   initFunc(scene);
+}
+
+function createChain(scene, pos, dist, set, chain) {
+  let s = new Vec2(1, 1);
+  let last = new Rigidbody(pos, s);
+  last.mass = 0;
+  scene.objects.push(last);
+  for(let i = 0; i < chain; ++i) {
+    let cur = new Rigidbody(new Vec2(last.pos.x + dist + s.x*2, last.pos.y), s);
+    let constraint = new DistanceConstraint(last, cur, new Vec2(1, 0), new Vec2(-1, 0), dist);
+    if(set)
+      set(constraint);
+    scene.objects.push(cur);
+    scene.constraints.push(constraint);
+    last = cur;
+  }
+}
+
+// Build a scene with two distance constraints configured by the two callbacks
+function distCompare(scene, setA, setB, chain) {
+  scene.scale = 10;
+  createChain(scene, new Vec2(10, 20), 2.5, setA, chain);
+  createChain(scene, new Vec2(26, 20), 2.5, setB, chain);
+}
+
+function addStack(scene, origin, objects, space) {
+  for(let i = 0; i < objects; ++i)
+    scene.objects.push(new Rigidbody(origin.add(new Vec2(0, -(2 + space)*i)), new Vec2(2, 1)));
 }
 
 addScene('constraints', (scene)=>{
@@ -53,29 +82,6 @@ addScene('constraints', (scene)=>{
   }
 });
 
-function createChain(scene, pos, dist, set, chain) {
-  let s = new Vec2(1, 1);
-  let last = new Rigidbody(pos, s);
-  last.mass = 0;
-  scene.objects.push(last);
-  for(let i = 0; i < chain; ++i) {
-    let cur = new Rigidbody(new Vec2(last.pos.x + dist + s.x*2, last.pos.y), s);
-    let constraint = new DistanceConstraint(last, cur, new Vec2(1, 0), new Vec2(-1, 0), dist);
-    if(set)
-      set(constraint);
-    scene.objects.push(cur);
-    scene.constraints.push(constraint);
-    last = cur;
-  }
-}
-
-// Build a scene with two distance constraints configured by the two callbacks
-function distCompare(scene, setA, setB, chain) {
-  scene.scale = 10;
-  createChain(scene, new Vec2(10, 20), 2.5, setA, chain);
-  createChain(scene, new Vec2(26, 20), 2.5, setB, chain);
-}
-
 addScene('noBias', (scene)=>{
   distCompare(scene, (ab)=>{
     ab.baumgarteTerm = 0.0;
@@ -94,11 +100,6 @@ addScene('biasRange', (scene)=>{
   },
   3);
 });
-
-function addStack(scene, origin, objects, space) {
-  for(let i = 0; i < objects; ++i)
-    scene.objects.push(new Rigidbody(origin.add(new Vec2(0, -(2 + space)*i)), new Vec2(1, 1)));
-}
 
 addScene('direction', (scene)=>{
   distCompare(scene, (ab)=>{

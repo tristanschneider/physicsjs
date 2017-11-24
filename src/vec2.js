@@ -61,4 +61,9 @@ export class Vec2 {
     this.y = safeDivide(this.y, len);
     return len;
   }
+
+  dist2(other) {
+    let to = other.sub(this);
+    return to.dot(to);
+  }
 }

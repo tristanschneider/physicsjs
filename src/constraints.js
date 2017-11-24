@@ -37,6 +37,8 @@ class Constraint {
 
   //Derived classes must set the jacobian, and can set whatever else, then must call super.setup
   setup(drawer) {
+    this.shouldEnforce = this.shouldEnforce && !this.shouldRemove;
+
     this.jm = new Jacobian(this.j.linA.mul(this.bodyA.mass),
       this.j.angA*this.bodyA.inertia,
       this.j.linB.mul(this.bodyB.mass),
@@ -121,12 +123,17 @@ export class ContactConstraint extends Constraint {
     this.lowerBound = 0.0;
   }
 
+  update(contact, normal, penetration) {
+    this.contact = contact;
+    this.normal = normal;
+    this.peneteration = penetration;
+  }
+
   setup(drawer) {
     //Normal is from reference to incident, we want to push apart, so flip
     this.setAnchoredJacobian(this.contact, this.contact, this.normal.neg());
     this.setBias(this.penetration);
-    //No persistent manifolds, so throw out these constraints after solving each frame
-    this.shouldRemove = true;
+
 
     super.setup(drawer);
   }
@@ -143,9 +150,12 @@ export class FrictionConstraint extends Constraint {
     this.frictionTerm = 0.99;
   }
 
+  update(normal) {
+    this.normal = normal;
+  }
+
   setup(drawer) {
-    this.setAnchoredJacobian(this.contact, this.contact, new Vec2(-this.normal.y, this.normal.x))
-    this.shouldRemove = true;
+    this.setAnchoredJacobian(this.contact, this.contact, new Vec2(-this.normal.y, this.normal.x));
     super.setup();
   }
 

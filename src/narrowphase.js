@@ -89,9 +89,9 @@ export class Narrowphase {
     let au = bodyA.getUp();
     let br = bodyB.getRight();
     let bu = bodyB.getUp();
-    return [ar, ar.neg(), au, au.neg(), br, br.neg(), bu, bu.neg()]
+    return [ar, ar.neg(), au, au.neg(), br, br.neg(), bu, bu.neg()];
   }
-  
+
   getManifold(bodyA, bodyB) {
     if(!bodyA.isMobile() && !bodyB.isMobile())
       return null;
@@ -116,6 +116,7 @@ export class Narrowphase {
     //Reference is the owner of the best normal, incident owns the contact point
     let referenceObject, incidentObject;
     let normal = axes[bestAxis];
+    let swapped = false;
     if(bestAxis < axes.length/2) {
       referenceObject = bodyA;
       incidentObject = bodyB;
@@ -124,6 +125,7 @@ export class Narrowphase {
       referenceObject = bodyB;
       incidentObject = bodyA;
       normal = normal.neg();
+      swapped = true;
     }
 
     let incidentEdge = this.getBoxEdge(normal.neg(), incidentObject);
@@ -140,6 +142,7 @@ export class Narrowphase {
       penetrations.push(refD - contacts[i].dot(normal));
     }
 
-    return new Manifold(contacts, penetrations, normal, referenceObject, incidentObject);
+    //Swap back to input a and b so the pair order is always consistent
+    return new Manifold(contacts, penetrations, swapped ? normal.neg() : normal, bodyA, bodyB);
   }
 }
