@@ -51,7 +51,7 @@ function distCompare(scene, setA, setB, chain) {
 
 function addStack(scene, origin, objects, space) {
   for(let i = 0; i < objects; ++i)
-    scene.objects.push(new Rigidbody(origin.add(new Vec2(0, -(2 + space)*i)), new Vec2(2, 1)));
+    scene.objects.push(new Rigidbody(origin.add(new Vec2(0, -(2 + space)*i)), new Vec2(1, 1)));
 }
 
 addScene('constraints', (scene)=>{
@@ -100,6 +100,19 @@ addScene('biasRange', (scene)=>{
   },
   3);
 });
+
+addScene('slop', (scene)=>{
+  scene.scale = 10;
+  addWalls(scene, new Vec2(20, 40), 0.5);
+  addStack(scene, new Vec2(10, 38), 5, 0);
+});
+
+addScene('noSlop', (scene)=>{
+  scene.scale = 10;  
+  scene.setContactSlop(0);
+  addWalls(scene, new Vec2(20, 40), 0.5);
+  addStack(scene, new Vec2(10, 38), 5, 0);
+}, 'slopReset');
 
 addScene('direction', (scene)=>{
   distCompare(scene, (ab)=>{
