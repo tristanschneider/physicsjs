@@ -116,6 +116,20 @@ addScene('direction', (scene)=>{
   addWalls(scene, new Vec2(40, 40), 0.5);
 });
 
+addScene('capped', (scene)=>{
+  scene.scale = 10;
+  let s = new Vec2(1, 1);
+  let a = new Rigidbody(new Vec2(20, 20), s);
+  a.mass = 0;
+  let b = new Rigidbody(new Vec2(25, 20), s);
+  let dist = new DistanceConstraint(a, b, new Vec2(1, 0), new Vec2(-1, 0), 6);
+  let bound = 5;
+  dist.upperBound = bound;
+  dist.lowerBound = -bound;
+  scene.constraints.push(dist);
+  scene.objects.push(a, b);
+});
+
 class StickyDistanceConstraint extends DistanceConstraint {
   constructor(bodyA, bodyB, modelAnchorA, modelAnchorB, distance) {
     super(bodyA, bodyB, modelAnchorA, modelAnchorB, distance);
