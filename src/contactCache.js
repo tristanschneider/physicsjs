@@ -26,6 +26,8 @@ export class ContactCache {
     this.contactPairs = {};
     //Slop to give contact constraints
     this.slop = slop;
+    //If points are within this distance they are matches as the same contact
+    this.matchThreshold = 0.05;
   }
 
   setConstraintContainer(constraints) {
@@ -84,14 +86,13 @@ export class ContactCache {
       pair.constraints[i][0].shouldRemove = true;
 
     if(attemptMatch) {
-      let matchThreshold = 0.05;
       for(let i = 0; i < m.contacts.length;) {
         let newPoint = m.contacts[i];
         let matchFound = false;
         for(let j = 0; j < pair.constraints.length; ++j) {
           let constraint = pair.constraints[j][0];
           //More precise would be to store points in model space, transorm them here to world then compare distance, but this will do
-          if(newPoint.dist2(constraint.contact) < matchThreshold) {
+          if(newPoint.dist2(constraint.contact) < this.matchThreshold) {
             constraint.shouldRemove = false;
             constraint.update(newPoint, m.normal, m.penetrations[i]);
             swapRemove(m.contacts, i);

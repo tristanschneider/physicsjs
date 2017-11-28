@@ -30,6 +30,7 @@ export class Scene {
     this.accumulatedTime = 0.0;
     this.lastTime = performance.now();
     this.contactCache = new ContactCache(this.constraints, 0.02);
+    this.constraintIterations = 20;
 
     this.setupInputEvents();
     this.queueUpdate();
@@ -44,6 +45,14 @@ export class Scene {
 
   setContactSlop(slop) {
     this.contactCache.slop = slop;
+  }
+
+  setContactMatchThreshold(threshold) {
+    this.contactCache.matchThreshold = threshold;
+  }
+
+  setConstraintIterations(iterations) {
+    this.constraintIterations = iterations;
   }
 
   setupInputEvents() {
@@ -187,7 +196,7 @@ export class Scene {
 
     //Solve until iteration cap or global solution
     let globalError = 0.0;
-    for(let i = 0; i < 20; ++i) {
+    for(let i = 0; i < this.constraintIterations; ++i) {
       globalError = 0.0;
       for(let j = 0; j < this.constraints.length; ++j)
         globalError += this.constraints[j].solve();

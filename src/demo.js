@@ -42,7 +42,7 @@ function createChain(scene, pos, dist, set, chain) {
   }
 }
 
-// Build a scene with two distance constraints configured by the two callbacks
+//Build a scene with two distance constraints configured by the two callbacks
 function distCompare(scene, setA, setB, chain) {
   scene.scale = 10;
   createChain(scene, new Vec2(10, 20), 2.5, setA, chain);
@@ -52,6 +52,22 @@ function distCompare(scene, setA, setB, chain) {
 function addStack(scene, origin, objects, space) {
   for(let i = 0; i < objects; ++i)
     scene.objects.push(new Rigidbody(origin.add(new Vec2(0, -(2 + space)*i)), new Vec2(1, 1)));
+}
+
+function sceneStackCompare(aName, bName, resetName, initFunc) {
+  let init = (scene)=>{
+    scene.scale = 10;
+    addWalls(scene, new Vec2(20, 40), 0.5);
+    addStack(scene, new Vec2(10, 38), 5, 0);
+  };
+  addScene(aName, (scene)=>{
+    init(scene);
+    initFunc(scene, true);
+  }, resetName);
+  addScene(bName, (scene)=>{
+    init(scene);
+    initFunc(scene, false);
+  }, resetName);
 }
 
 addScene('constraints', (scene)=>{
@@ -101,18 +117,16 @@ addScene('biasRange', (scene)=>{
   3);
 });
 
-addScene('slop', (scene)=>{
-  scene.scale = 10;
-  addWalls(scene, new Vec2(20, 40), 0.5);
-  addStack(scene, new Vec2(10, 38), 5, 0);
+sceneStackCompare('slop', 'noSlop', 'slopReset', (scene, first)=>{
+  if(!first)
+    scene.setContactSlop(0);
 });
 
-addScene('noSlop', (scene)=>{
-  scene.scale = 10;  
-  scene.setContactSlop(0);
-  addWalls(scene, new Vec2(20, 40), 0.5);
-  addStack(scene, new Vec2(10, 38), 5, 0);
-}, 'slopReset');
+sceneStackCompare('warm', 'cold', 'warmReset', (scene, first)=>{
+  if(!first)
+    scene.setContactMatchThreshold(0);
+  scene.setConstraintIterations(10);
+});
 
 addScene('direction', (scene)=>{
   distCompare(scene, (ab)=>{
